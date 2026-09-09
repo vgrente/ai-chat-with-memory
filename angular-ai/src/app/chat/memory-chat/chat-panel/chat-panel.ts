@@ -54,16 +54,30 @@ export class ChatPanel {
   });
 
   /**
+   * Tracks the previously seen chat id, captured at construction time so it
+   * reflects whatever was already selected on mount (e.g. after navigating
+   * away from and back to this route, where the singleton service still
+   * holds the previous selection).
+   */
+  private previousChatId = this.memoryChatService.selectedChatId();
+
+  /**
    * Effect: Clear messages when switching chats
    *
    * When the user clicks "New chat" or switches to a different conversation,
    * we clear the current messages to avoid showing the wrong history.
    *
    * Why? Prevents visual glitches where old messages briefly appear.
+   * Only clears on an actual change - not on the effect's initial run -
+   * so remounting this component doesn't wipe out messages that
+   * syncMessagesEffect just restored from the already-cached resource.
    */
   private readonly clearMessagesEffect = effect(() => {
-    this.memoryChatService.selectedChatId();
-    this.messages.set([]);
+    const chatId = this.memoryChatService.selectedChatId();
+    if (chatId !== this.previousChatId) {
+      this.previousChatId = chatId;
+      this.messages.set([]);
+    }
   });
 
   /**

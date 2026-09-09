@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -44,10 +45,10 @@ class ChatMemoryIDRepositoryTest {
     }
 
     @Test
-    fun `generateChatId inserts a row and returns its generated id`() {
-        val chatId = repository.generateChatId("Vincent", "a new chat")
+    fun `createChat inserts a row with the given id`() {
+        val chatId = UUID.randomUUID().toString()
+        repository.createChat(chatId, "Vincent", "a new chat")
 
-        assertTrue(chatId != null && chatId.isNotBlank())
         assertTrue(repository.chatIdExists(chatId))
     }
 
@@ -65,27 +66,35 @@ class ChatMemoryIDRepositoryTest {
 
     @Test
     fun `requireChatExists does not throw for a known chatId`() {
-        val chatId = repository.generateChatId("Vincent", "a new chat")!!
+        val chatId = UUID.randomUUID().toString()
+        repository.createChat(chatId, "Vincent", "a new chat")
 
         repository.requireChatExists(chatId)
     }
 
     @Test
     fun `getAllChatsForUser returns only chats belonging to that user, newest first`() {
-        val firstChatId = repository.generateChatId("Vincent", "first chat")!!
-        val secondChatId = repository.generateChatId("Vincent", "second chat")!!
-        repository.generateChatId("SomeoneElse", "not vincent's chat")
+        val firstChatId = UUID.randomUUID().toString()
+        val secondChatId = UUID.randomUUID().toString()
+        jdbcTemplate.update(
+            "INSERT INTO chat_memory (conversation_id, user_id, description, created_at) VALUES (?::uuid, ?, ?, ?)",
+            firstChatId, "Vincent", "first chat", java.sql.Timestamp(0)
+        )
+        jdbcTemplate.update(
+            "INSERT INTO chat_memory (conversation_id, user_id, description, created_at) VALUES (?::uuid, ?, ?, ?)",
+            secondChatId, "Vincent", "second chat", java.sql.Timestamp(1000)
+        )
+        repository.createChat(UUID.randomUUID().toString(), "SomeoneElse", "not vincent's chat")
 
         val chats = repository.getAllChatsForUser("Vincent")
 
-        assertEquals(listOf(secondChatId, firstChatId).sorted(), chats.map { it.id }.sorted())
-        assertTrue(chats.all { it.id == firstChatId || it.id == secondChatId })
-        assertEquals(2, chats.size)
+        assertEquals(listOf(secondChatId, firstChatId), chats.map { it.id })
     }
 
     @Test
     fun `getChatMessages returns an empty list when no messages exist`() {
-        val chatId = repository.generateChatId("Vincent", "empty chat")!!
+        val chatId = UUID.randomUUID().toString()
+        repository.createChat(chatId, "Vincent", "empty chat")
 
         val messages = repository.getChatMessages(chatId)
 
@@ -94,7 +103,8 @@ class ChatMemoryIDRepositoryTest {
 
     @Test
     fun `getChatMessages returns messages for the chat ordered by timestamp`() {
-        val chatId = repository.generateChatId("Vincent", "chat with messages")!!
+        val chatId = UUID.randomUUID().toString()
+        repository.createChat(chatId, "Vincent", "chat with messages")
         jdbcTemplate.update(
             "INSERT INTO spring_ai_chat_memory (conversation_id, content, type, \"timestamp\") VALUES (?, ?, ?, ?)",
             chatId, "hello", "USER", java.sql.Timestamp(0)

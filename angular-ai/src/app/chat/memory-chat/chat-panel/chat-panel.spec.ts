@@ -136,6 +136,31 @@ describe('ChatPanel', () => {
 
       expect(component.messages()).toEqual([]);
     });
+
+    it('keeps the cached history when remounting with a chat already selected', async () => {
+      // Simulates navigating away from and back to this route: the singleton
+      // service already has a chat selected and its resource already resolved,
+      // before this ChatPanel instance is even created.
+      const remountedService = mockMemoryChatService();
+      remountedService.selectedChatId.set('chat-1');
+      remountedService.chatMessagesResource.value.set([
+        { content: 'old question', type: ChatType.USER },
+        { content: 'old answer', type: ChatType.ASSISTANT }
+      ]);
+
+      await TestBed.resetTestingModule().configureTestingModule({
+        imports: [ChatPanel],
+        providers: [{ provide: MemoryChatService, useValue: remountedService }]
+      }).compileComponents();
+
+      const remountedFixture = TestBed.createComponent(ChatPanel);
+      await remountedFixture.whenStable();
+
+      expect(remountedFixture.componentInstance.messages()).toEqual([
+        { content: 'old question', type: ChatType.USER },
+        { content: 'old answer', type: ChatType.ASSISTANT }
+      ]);
+    });
   });
 
   describe('onKeyPress', () => {

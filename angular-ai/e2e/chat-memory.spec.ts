@@ -60,4 +60,39 @@ test.describe('Chat with Memory', () => {
     await expect(page.getByText('Sure, here is a plan.')).toBeVisible();
     await expect(page.getByText('New trip')).toBeVisible();
   });
+
+  test('loads chat history after navigating to chat-memory via the nav button (no reload)', async ({ page }) => {
+    await page.route('**/api/chat-memory', route => route.fulfill({ json: CHATS }));
+    await page.route('**/api/chat-memory/chat-1', route => route.fulfill({ json: MESSAGES_CHAT_1 }));
+
+    await page.goto('/simple-chat');
+    await page.getByRole('button', { name: 'Chat with Memory' }).click();
+
+    await expect(page.getByText('Trip planning')).toBeVisible();
+    await page.getByText('Trip planning').click();
+
+    await expect(page.getByText('What should I pack for Japan?')).toBeVisible();
+    await expect(page.getByText('Bring layers, it varies by season.')).toBeVisible();
+  });
+
+  test('re-selecting the same chat after leaving and returning to chat-memory', async ({ page }) => {
+    await page.route('**/api/chat-memory', route => route.fulfill({ json: CHATS }));
+    await page.route('**/api/chat-memory/chat-1', route => route.fulfill({ json: MESSAGES_CHAT_1 }));
+
+    await page.goto('/simple-chat');
+    await page.getByRole('button', { name: 'Chat with Memory' }).click();
+    await page.getByText('Trip planning').click();
+    await expect(page.getByText('What should I pack for Japan?')).toBeVisible();
+
+    // Leave chat-memory and come back (ChatPanel/ChatList get destroyed and recreated,
+    // but the root MemoryChatService singleton still has selectedChatId = 'chat-1')
+    await page.getByRole('button', { name: 'Simple Chat' }).click();
+    await page.getByRole('button', { name: 'Chat with Memory' }).click();
+
+    // Click the same chat again
+    await page.getByText('Trip planning').click();
+
+    await expect(page.getByText('What should I pack for Japan?')).toBeVisible();
+    await expect(page.getByText('Bring layers, it varies by season.')).toBeVisible();
+  });
 });

@@ -13,9 +13,9 @@ class ChatMemoryIDRepository(val jdbcTemplate: JdbcTemplate) {
         if (!chatIdExists(chatId)) throw ChatNotFoundException(chatId)
     }
 
-    fun generateChatId(userId: String, description: String): String? {
-        val sql = "INSERT INTO chat_memory (user_id, description) VALUES (?, ?) RETURNING conversation_id"
-        return jdbcTemplate.queryForObject(sql, String::class.java, userId, description)
+    fun createChat(chatId: String, userId: String, description: String) {
+        val sql = "INSERT INTO chat_memory (conversation_id, user_id, description) VALUES (?::uuid, ?, ?)"
+        jdbcTemplate.update(sql, chatId, userId, description)
     }
 
     fun chatIdExists(chatId: String): Boolean {
@@ -24,7 +24,7 @@ class ChatMemoryIDRepository(val jdbcTemplate: JdbcTemplate) {
     }
 
     fun getAllChatsForUser(userId: String): List<Chat> {
-        val sql = "SELECT conversation_id, description FROM chat_memory WHERE user_id = ? ORDER BY conversation_id DESC"
+        val sql = "SELECT conversation_id, description FROM chat_memory WHERE user_id = ? ORDER BY created_at DESC"
         return jdbcTemplate.query(
             sql,
             { rs, _ -> Chat(rs.getString("conversation_id"), rs.getString("description")) },

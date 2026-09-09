@@ -2,7 +2,6 @@ package io.vgrente.ai_chat_with_memory.chatmemory.service
 
 import io.vgrente.ai_chat_with_memory.chatmemory.Chat
 import io.vgrente.ai_chat_with_memory.chatmemory.ChatMessage
-import io.vgrente.ai_chat_with_memory.chatmemory.ChatStartResponse
 import io.vgrente.ai_chat_with_memory.chatmemory.repository.ChatMemoryIDRepository
 import io.vgrente.ai_chat_with_memory.common.ApiResult
 import io.vgrente.ai_chat_with_memory.common.ChatNotFoundException
@@ -15,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
 import org.mockito.quality.Strictness
 import org.springframework.ai.chat.client.ChatClient
 import org.springframework.ai.chat.client.advisor.api.Advisor
@@ -124,43 +125,35 @@ class ChatMemoryServiceTest {
     fun `createChatWithResponse returns Success with generated chatId, description and reply`() {
         val service = service()
         given(callResponseSpec.content()).willReturn("Generated description", "hi there")
-        given(chatMemoryRepository.generateChatId("Vincent", "Generated description")).willReturn("chat-1")
 
         val result = service.createChatWithResponse("hello")
+        check(result is ApiResult.Success)
 
-        assertEquals(ApiResult.Success(ChatStartResponse("chat-1", "hi there", "Generated description")), result)
+        assertEquals("hi there", result.data.message)
+        assertEquals("Generated description", result.data.description)
+        verify(chatMemoryRepository).createChat(result.data.chatId, "Vincent", "Generated description")
     }
 
     @Test
     fun `createChatWithResponse falls back to a default description when description generation fails`() {
         val service = service()
         given(callResponseSpec.content()).willReturn(null, "hi there")
-        given(chatMemoryRepository.generateChatId("Vincent", "description")).willReturn("chat-1")
 
         val result = service.createChatWithResponse("hello")
+        check(result is ApiResult.Success)
 
-        assertEquals(ApiResult.Success(ChatStartResponse("chat-1", "hi there", "description")), result)
-    }
-
-    @Test
-    fun `createChatWithResponse returns Failure when chatId could not be generated`() {
-        val service = service()
-        given(callResponseSpec.content()).willReturn("Generated description")
-        given(chatMemoryRepository.generateChatId("Vincent", "Generated description")).willReturn(null)
-
-        val result = service.createChatWithResponse("hello")
-
-        assertEquals(ApiResult.Failure("Could not create chat"), result)
+        assertEquals("description", result.data.description)
+        verify(chatMemoryRepository).createChat(result.data.chatId, "Vincent", "description")
     }
 
     @Test
     fun `createChatWithResponse returns Failure when the model fails to respond`() {
         val service = service()
         given(callResponseSpec.content()).willReturn("Generated description", null)
-        given(chatMemoryRepository.generateChatId("Vincent", "Generated description")).willReturn("chat-1")
 
         val result = service.createChatWithResponse("hello")
 
         assertEquals(ApiResult.Failure("No response from AI"), result)
+        verify(chatMemoryRepository, never()).createChat(any(), any(), any())
     }
 }

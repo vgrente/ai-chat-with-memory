@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS CHAT_MEMORY (
     conversation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id VARCHAR(256),
-    description VARCHAR(256)
+    description VARCHAR(256),
+    created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS spring_ai_chat_memory (

@@ -12,10 +12,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/chat-memory")
 class MemoryChatController(
-    private val chatMemoryService: ChatMemoryService,
+    val chatMemoryService: ChatMemoryService,
 ) {
-
-
     @GetMapping
     fun getAllChats(): ResponseEntity<Any> {
         return chatMemoryService.getAllChats().toResponseEntity()
