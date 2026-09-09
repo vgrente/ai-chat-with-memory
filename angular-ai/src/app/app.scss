@@ -1,3 +1,16 @@
 .title {
   margin-right: 20px;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.router-content {
+  flex: 1 1 auto;
+  min-height: 0;
 }

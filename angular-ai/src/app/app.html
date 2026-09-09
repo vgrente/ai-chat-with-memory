@@ -1,5 +1,8 @@
 <mat-toolbar>
-  <span class="title"></span>
+  <span class="title">{{ title }}</span>
   <button mat-button aria-label="Simple Chat" routerLink="/simple-chat">Simple Chat</button>
+  <button mat-button aria-label="Chat with Memory" routerLink="/chat-memory">Chat with Memory</button>
 </mat-toolbar>
-<router-outlet></router-outlet>
+<div class="router-content">
+  <router-outlet></router-outlet>
+</div>

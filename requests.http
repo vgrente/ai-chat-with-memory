@@ -1,0 +1,30 @@
+### Start a new chat (generates a description + first response, stored under DEFAULT_USER_ID)
+POST http://localhost:8080/api/chat-memory/start
+Content-Type: application/json
+
+{
+  "message": "Hello, what's the capital of France?"
+}
+
+### List all chats for the default user
+GET http://localhost:8080/api/chat-memory/
+
+### Get messages for a specific chat (replace {{chatId}} with an id from the responses above)
+GET http://localhost:8080/api/chat-memory/{{chatId}}
+
+### Continue an existing chat (replace {{chatId}} with an id from the responses above)
+POST http://localhost:8080/api/chat-memory/{{chatId}}
+Content-Type: application/json
+
+{
+  "message": "And what's a good dish to try there?"
+}
+
+
+###
+POST http://localhost:8080/api/chat
+Content-Type: application/json
+
+{
+  "message": "Tell me a joke"
+}

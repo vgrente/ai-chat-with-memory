@@ -3,6 +3,8 @@ plugins {
 	id 'org.jetbrains.kotlin.plugin.spring' version '2.3.21'
 	id 'org.springframework.boot' version '4.1.1'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id "org.sonarqube" version "7.3.1.8318"
+	id 'jacoco'
 }
 
 group = 'io.vgrente'
@@ -20,31 +22,47 @@ repositories {
 
 ext {
 	set('springAiVersion', "2.0.1")
+	set('springModulithVersion', "2.1.1")
+	set('testcontainersVersion', "2.0.5")
+	set('arconiaVersion', "0.30.0")
+	set('mockitoKotlinVersion', "5.4.0")
 }
 
 dependencies {
-//	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.modulith:spring-modulith-starter-core'
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
+	implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
 	implementation 'tools.jackson.module:jackson-module-kotlin'
-//	implementation 'org.springframework.boot:spring-boot-starter-flyway'
-//
-//	runtimeOnly 'org.postgresql:postgresql'
-//
-//	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-//	testAndDevelopmentOnly 'io.arconia:arconia-dev-services-postgresql'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
 
+	runtimeOnly 'org.postgresql:postgresql'
+	runtimeOnly("org.flywaydb:flyway-database-postgresql")
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testAndDevelopmentOnly 'io.arconia:arconia-dev-services-postgresql'
+
+	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+	testImplementation 'org.springframework.modulith:spring-modulith-docs'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jdbc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+	testImplementation "org.mockito.kotlin:mockito-kotlin:${mockitoKotlinVersion}"
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {
 	imports {
+		mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
 		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
-		mavenBom "io.arconia:arconia-bom:0.30.0"
+		mavenBom "io.arconia:arconia-bom:${arconiaVersion}"
+		mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
 	}
 }
 
@@ -56,4 +74,25 @@ kotlin {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy tasks.jacocoTestReport
+}
+
+tasks.named('jacocoTestReport') {
+	dependsOn tasks.test
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}
+
+tasks.register('generateModuleDiagram', JavaExec) {
+	group = 'documentation'
+	description = 'Renders the Spring Modulith module structure as Mermaid into README.md'
+	dependsOn tasks.testClasses
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'io.vgrente.ai_chat_with_memory.docs.GenerateModuleDiagramKt'
+}
+
+tasks.named('build') {
+	dependsOn tasks.generateModuleDiagram
 }

@@ -23,21 +23,22 @@
 }
 
 .message {
+  display: flex;
   margin-bottom: 8px;
 }
 
 .message-bubble {
-  padding: 10px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
   max-width: 80%;
-  display: inline-block;
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
 }
 
 .user {
-  background-color: #d7e3ff; /* Light blue for user messages */
-  border-radius: 10px;
-  align-self: flex-end; /* Align to the right */
-  margin-left: auto;
+  margin-left: auto; /* push to the right, now that .message is a flex row */
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
 }
 
 
