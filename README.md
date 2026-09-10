@@ -7,8 +7,6 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Angular](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)](https://angular.dev)
 [![Gradle](https://img.shields.io/badge/Gradle-02303A?logo=gradle&logoColor=white)](https://gradle.org)
-<!-- TODO: add a CI status badge and a coverage badge once a pipeline exists.
-     A green build badge is the one that tells a reader the tests actually run. -->
 
 A Kotlin and Spring Boot backend that demonstrates a disciplined modular monolith: two independent chat features (a stateless one-shot endpoint and a persistent chat-with-memory endpoint on Google Gemini) built as Spring Modulith modules whose boundaries are enforced at build time, documented by a diagram generated from the code, and covered by tests that run against real Postgres.
 
@@ -62,7 +60,7 @@ flowchart TB
 
 - JDK 25
 - Docker running (Postgres is auto-provisioned in dev and test via Arconia dev services)
-- A Google Cloud project with Vertex AI / Gemini enabled, and Application Default Credentials configured <!-- TODO: confirm your exact auth step, e.g. `gcloud auth application-default login` -->
+- A Google Cloud project with Vertex AI / Gemini enabled, and Application Default Credentials configured
 
 **Configure**
 
@@ -85,7 +83,7 @@ The model and region are set in `application.properties` (`gemini-2.5-flash`, `e
 ```bash
 cd angular-ai
 npm install
-npm start              # TODO: confirm the dev script and port in angular-ai/package.json
+npm start              
 ```
 
 ## API
